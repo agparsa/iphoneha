@@ -1,0 +1,28 @@
+[Unit]
+Description=iPhoneHa API (NestJS)
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=iphoneha
+Group=iphoneha
+WorkingDirectory=/home/iphoneha/app/apps/api
+EnvironmentFile=/home/iphoneha/app/.env
+Environment=NODE_ENV=production
+ExecStart=/bin/node dist/main.js
+Restart=always
+RestartSec=5
+# the box also runs three other sites — keep this service from eating the RAM
+MemoryMax=900M
+StandardOutput=append:/home/iphoneha/logs/api.log
+StandardError=append:/home/iphoneha/logs/api.error.log
+# hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/home/iphoneha/app /home/iphoneha/logs
+
+[Install]
+WantedBy=multi-user.target

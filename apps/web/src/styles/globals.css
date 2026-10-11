@@ -1,0 +1,796 @@
+@import 'tailwindcss';
+
+/*
+ * iPhoneHa design tokens — the green brand pack (monogram «آ»): main green
+ * #0E8A5C, dark green #0C2B21, mint #BFE3D2, ivory #F5F2EC, black #141416.
+ * Warm ivory surfaces, hairline borders, pill buttons, almost no shadow.
+ */
+@theme {
+  --color-ink: #141416;
+  --color-ink-soft: #26272b;
+  --color-ink-muted: #43464b;
+  /* Greys are darkened so every size of text clears WCAG AA (4.5:1) on white
+     and on the ivory surfaces below. */
+  --color-muted: #5d6066;
+  --color-muted-soft: #61646b;
+  --color-muted-faint: #686b72;
+  /* decorative only (icons, separators) — never used for text */
+  --color-hairline-ink: #b8b4ab;
+
+  --color-canvas: #ffffff;
+  --color-surface: #f6f3ee;
+  --color-surface-2: #faf8f4;
+  --color-surface-3: #efebe3;
+  --color-line: #ebe6dc;
+  --color-line-strong: #ddd6c9;
+
+  /* brand: the identity green, for glows, rings, icons and large shapes.
+     White text on #0e8a5c is only 4.4:1, so anything carrying text (buttons,
+     badges, green text) uses brand-strong (5.4:1) or brand-ink (7:1). */
+  --color-brand: #0e8a5c;
+  --color-brand-strong: #0b754e;
+  --color-brand-ink: #0a6644;
+  --color-brand-deep: #0c2b21;
+  --color-brand-deep-soft: #14392c;
+  --color-brand-mint: #bfe3d2;
+  --color-brand-soft: #e7f3ed;
+  --color-ivory: #f5f2ec;
+
+  --color-success: #0a6f4b;
+  --color-success-soft: #e7f3ed;
+  --color-danger: #c62b3c;
+  --color-danger-soft: #fdecee;
+  --color-warning: #9a5b00;
+  --color-warning-soft: #fdf3e3;
+  --color-info: #2360cf;
+  --color-info-soft: #eaf1fd;
+
+  --radius-card: 1rem;
+  --radius-panel: 1.375rem;
+  --radius-pill: 99px;
+
+  --font-sans: var(--font-estedad), system-ui, sans-serif;
+  --font-display: var(--font-manrope), var(--font-estedad), sans-serif;
+
+  /* Shadows stay whisper-light (spec §17) — depth comes from hairlines. */
+  --shadow-hairline: 0 1px 2px rgb(8 9 10 / 0.04);
+  --shadow-card: 0 1px 3px rgb(8 9 10 / 0.05), 0 8px 24px -20px rgb(8 9 10 / 0.25);
+  --shadow-raised: 0 6px 20px -12px rgb(8 9 10 / 0.18);
+  --shadow-float: 0 -1px 0 rgb(8 9 10 / 0.05), 0 -10px 30px -24px rgb(8 9 10 / 0.35);
+
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.26, 0.64, 1);
+
+  --breakpoint-xs: 25rem;
+
+  --animate-fade-in: ih-fade-in 0.2s ease-out;
+  --animate-fade-out: ih-fade-out 0.15s ease-in;
+  --animate-pop-in: ih-pop-in 0.18s ease-out;
+  --animate-sheet-up: ih-sheet-up 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  --animate-sheet-down: ih-sheet-down 0.2s ease-in;
+  --animate-panel-in: ih-panel-in 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+  --animate-panel-out: ih-panel-out 0.2s ease-in;
+  --animate-accordion-down: ih-accordion-down 0.22s ease-out;
+  --animate-accordion-up: ih-accordion-up 0.18s ease-in;
+
+  @keyframes ih-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes ih-fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes ih-pop-in {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+  @keyframes ih-sheet-up {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+  @keyframes ih-sheet-down {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(100%);
+    }
+  }
+  @keyframes ih-panel-in {
+    from {
+      transform: translateX(var(--ih-panel-offset, 100%));
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+  @keyframes ih-panel-out {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(var(--ih-panel-offset, 100%));
+    }
+  }
+  @keyframes ih-accordion-down {
+    from {
+      height: 0;
+      opacity: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+      opacity: 1;
+    }
+  }
+  @keyframes ih-accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+      opacity: 1;
+    }
+    to {
+      height: 0;
+      opacity: 0;
+    }
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: 'ss02';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--color-brand);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+  }
+
+  /* Latin numerals and English words keep the display face */
+  .font-display,
+  .tabular {
+    font-family: var(--font-display);
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* iOS: stop Safari zooming on focus */
+  @supports (-webkit-touch-callout: none) {
+    input,
+    select,
+    textarea {
+      font-size: max(16px, 1em);
+    }
+  }
+}
+
+@layer components {
+  .container-page {
+    width: 100%;
+    margin-inline: auto;
+    padding-inline: 1rem;
+    max-width: 80rem;
+  }
+
+  @media (min-width: 48rem) {
+    .container-page {
+      padding-inline: 1.5rem;
+    }
+  }
+
+  .hairline {
+    border: 1px solid var(--color-line);
+  }
+
+  .card-surface {
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+  }
+
+  /* A card that lifts a hair on hover — the only motion the catalogue uses. */
+  .card-interactive {
+    transition:
+      border-color 0.25s var(--ease-out-quint),
+      box-shadow 0.25s var(--ease-out-quint),
+      transform 0.25s var(--ease-out-quint);
+  }
+
+  @media (hover: hover) {
+    .card-interactive:hover {
+      border-color: var(--color-line-strong);
+      box-shadow: var(--shadow-card);
+      transform: translateY(-2px);
+    }
+  }
+
+  /* Section heading rhythm used across the storefront */
+  .section-gap {
+    margin-block: 3.5rem;
+  }
+
+  @media (min-width: 48rem) {
+    .section-gap {
+      margin-block: 5rem;
+    }
+  }
+
+  .eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.6875rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-muted-soft);
+  }
+
+  /* horizontal snap rails used by the mobile carousels */
+  .rail {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding-block: 0.25rem;
+  }
+
+  .rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .rail > * {
+    scroll-snap-align: start;
+    flex: 0 0 auto;
+  }
+
+  /* Magazine article body (Markdown rendered by react-markdown). */
+  .article-body {
+    color: var(--color-ink-muted);
+    font-size: 0.9375rem;
+    line-height: 2.05;
+  }
+
+  .article-body > * + * {
+    margin-top: 1.1em;
+  }
+
+  .article-body h2 {
+    margin-top: 2.2em;
+    scroll-margin-top: 6rem;
+    color: var(--color-ink);
+    font-size: 1.3rem;
+    font-weight: 700;
+    line-height: 1.7;
+  }
+
+  .article-body h3 {
+    margin-top: 1.8em;
+    scroll-margin-top: 6rem;
+    color: var(--color-ink);
+    font-size: 1.08rem;
+    font-weight: 700;
+    line-height: 1.7;
+  }
+
+  .article-body strong {
+    color: var(--color-ink);
+    font-weight: 700;
+  }
+
+  .article-body a {
+    color: var(--color-brand-ink);
+    font-weight: 500;
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--color-brand) 45%, transparent);
+    text-underline-offset: 5px;
+    transition: text-decoration-color 0.2s;
+  }
+
+  .article-body a:hover {
+    text-decoration-color: var(--color-brand-ink);
+  }
+
+  .article-body ul,
+  .article-body ol {
+    padding-inline-start: 1.4em;
+  }
+
+  .article-body ul {
+    list-style: disc;
+  }
+
+  .article-body ol {
+    list-style: decimal;
+  }
+
+  .article-body li + li {
+    margin-top: 0.45em;
+  }
+
+  .article-body li::marker {
+    color: var(--color-brand);
+  }
+
+  .article-body blockquote {
+    border-inline-start: 3px solid var(--color-brand);
+    background: var(--color-brand-soft);
+    border-radius: 0.75rem;
+    padding: 0.9em 1.1em;
+    color: var(--color-ink-soft);
+  }
+
+  .article-body hr {
+    border: 0;
+    border-top: 1px solid var(--color-line);
+    margin-block: 2em;
+  }
+
+  .article-body table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    line-height: 1.8;
+  }
+
+  .article-body th,
+  .article-body td {
+    border-bottom: 1px solid var(--color-line);
+    padding: 0.65em 0.9em;
+    text-align: start;
+    vertical-align: top;
+  }
+
+  .article-body th {
+    background: var(--color-surface-2);
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+
+  .article-body code {
+    background: var(--color-surface);
+    border-radius: 0.35rem;
+    padding: 0.1em 0.35em;
+    font-size: 0.9em;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Fine hairline used under sticky bars so they read as a layer, not a block */
+.layer-top {
+  box-shadow: var(--shadow-float);
+}
+
+@keyframes ih-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-fade-up {
+  animation: ih-fade-up 0.35s ease-out both;
+}
+
+/* ── product motion ──────────────────────────────────────────────────────── */
+
+/* lets the gallery glow fade from one colour to the next instead of jumping */
+@property --glow {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #0e8a5c;
+}
+
+@keyframes ih-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes ih-float-shadow {
+  0%,
+  100% {
+    transform: scaleX(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scaleX(0.84);
+    opacity: 0.3;
+  }
+}
+
+/* opacity and transform only: both run on the compositor, off the main thread */
+@keyframes ih-gallery-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ih-ken-burns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.09);
+  }
+}
+
+@keyframes ih-shine {
+  from {
+    transform: translateX(-160%) skewX(-20deg);
+  }
+  to {
+    transform: translateX(260%) skewX(-20deg);
+  }
+}
+
+/* the ring spreading out of a call-to-action: a scaled, fading copy of its
+   shape (transform + opacity), never an animated box-shadow, which would
+   repaint the page on every frame */
+@keyframes ih-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.45;
+  }
+  70%,
+  100% {
+    transform: scale(1.12, 1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes ih-spin {
+  to {
+    transform: translate(-50%, -50%) rotate(1turn);
+  }
+}
+
+@keyframes ih-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.gallery-glow {
+  background:
+    radial-gradient(58% 52% at 50% 46%, color-mix(in srgb, var(--glow) 34%, transparent), transparent 72%),
+    radial-gradient(90% 70% at 50% 100%, color-mix(in srgb, var(--glow) 12%, transparent), transparent 70%);
+  transition: --glow 0.8s var(--ease-out-quint);
+}
+
+.gallery-in {
+  animation: ih-gallery-in 0.55s var(--ease-out-quint) both;
+}
+
+.animate-float {
+  animation: ih-float 6s ease-in-out infinite;
+}
+
+.animate-float-shadow {
+  animation: ih-float-shadow 6s ease-in-out infinite;
+}
+
+.animate-ken-burns {
+  animation: ih-ken-burns 14s ease-in-out infinite alternate;
+}
+
+.animate-pop {
+  animation: ih-pop 0.45s var(--ease-spring) both;
+}
+
+/* wraps a call-to-action (the button itself clips its shine, so the ring has
+   to live on the outside); --pulse is the ring's colour */
+.pulse-ring {
+  isolation: isolate;
+}
+
+.pulse-ring::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--pulse, #0e8a5c);
+  opacity: 0;
+  animation: ih-pulse 2.4s ease-out infinite;
+  pointer-events: none;
+}
+
+/* tilt: the gallery sets --rx/--ry from the pointer */
+.tilt {
+  transform: perspective(1100px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 0.5s var(--ease-out-quint);
+  transform-style: preserve-3d;
+}
+
+/* a light sweeping across a button once in a while */
+/* the element itself must be positioned (relative/absolute utilities) */
+.shine {
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.shine::after {
+  content: '';
+  position: absolute;
+  /* under the label (the button isolates its own stack), over its background */
+  z-index: -1;
+  inset: 0 auto 0 0;
+  width: 40%;
+  /* --shine: the glint's colour, for light buttons where white wouldn't show */
+  background: linear-gradient(90deg, transparent, var(--shine, rgb(255 255 255 / 0.38)), transparent);
+  animation: ih-shine 3.6s ease-in-out infinite;
+  animation-delay: 1.2s;
+  pointer-events: none;
+}
+
+/* a gradient border that keeps turning, around the instalment call-to-action:
+   a conic gradient spins behind (a compositor-only rotation) and the inner
+   fill covers all of it but a 1.5px rim */
+.ring-gradient {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.ring-gradient::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: -2;
+  width: max(200%, 18rem);
+  aspect-ratio: 1;
+  background: conic-gradient(#0e8a5c, #3ec28f, #bfe3d2, #0e8a5c);
+  transform: translate(-50%, -50%);
+  animation: ih-spin 4.5s linear infinite;
+  pointer-events: none;
+}
+
+.ring-gradient::after {
+  content: '';
+  position: absolute;
+  inset: 1.5px;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--color-canvas);
+  pointer-events: none;
+}
+
+/* scroll reveal: only applied after hydration to content below the fold */
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+}
+
+.reveal-in {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.7s var(--ease-out-quint),
+    transform 0.7s var(--ease-out-quint);
+}
+
+/* the details column arrives in a short cascade */
+.stagger > * {
+  animation: ih-fade-up 0.6s var(--ease-out-quint) both;
+}
+
+.stagger > *:nth-child(2) {
+  animation-delay: 60ms;
+}
+.stagger > *:nth-child(3) {
+  animation-delay: 120ms;
+}
+.stagger > *:nth-child(4) {
+  animation-delay: 180ms;
+}
+.stagger > *:nth-child(5) {
+  animation-delay: 240ms;
+}
+.stagger > *:nth-child(6) {
+  animation-delay: 300ms;
+}
+.stagger > *:nth-child(n + 7) {
+  animation-delay: 360ms;
+}
+
+/* below-the-fold sections: the browser skips their layout and paint (and their
+   animations) until they come near the viewport */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}
+
+/* ── dark-green panels and banners ───────────────────────────────────────── */
+
+/* soft light blobs drifting behind the dark-green panels */
+@keyframes ih-drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(8%, -6%) scale(1.08);
+  }
+  66% {
+    transform: translate(-6%, 5%) scale(0.95);
+  }
+}
+
+.animate-drift {
+  animation: ih-drift 16s ease-in-out infinite;
+}
+
+.animate-drift-slow {
+  animation: ih-drift 24s ease-in-out infinite reverse;
+}
+
+/* the fill of the active dot under an auto-advancing banner */
+@keyframes ih-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.animate-progress {
+  transform-origin: right;
+  animation: ih-progress var(--progress-duration, 6s) linear both;
+}
+
+/* a faint grid fading out from one corner of the dark-green panels */
+.panel-grid {
+  background-image:
+    linear-gradient(rgb(255 255 255 / 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.045) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(70% 70% at 70% 30%, black, transparent 75%);
+}
+
+/* ── stories (home page) ─────────────────────────────────────────────────── */
+
+/* the ring around a story nobody has opened in this browser: it turns once as
+   the page opens (a ring that kept turning would be motion nobody can stop) */
+@keyframes ih-story-spin {
+  from {
+    transform: rotate(-1turn);
+  }
+}
+
+.story-ring {
+  background: var(--story);
+  background: conic-gradient(from 20deg, var(--story), #34d399, #bfe3d2, #f5b544, var(--story));
+  animation: ih-story-spin 1.8s var(--ease-out-quint) 0.15s both;
+}
+
+.story-ring[data-seen] {
+  background: var(--color-line-strong);
+  animation: none;
+}
+
+/* paused by its button: the loops stop too (entrances still finish, or a
+   slide opened while paused would stay invisible) */
+.story-stage[data-paused] :is(.animate-float, .animate-drift) {
+  animation-play-state: paused;
+}
+
+/* a story without artwork of its own: its colour, lit from one corner and
+   darkest at the bottom, where the words sit */
+.story-stage {
+  background-color: #0c2b21;
+  background-image:
+    radial-gradient(120% 55% at 0% 0%, color-mix(in srgb, var(--story) 70%, white), transparent 70%),
+    radial-gradient(90% 45% at 100% 40%, color-mix(in srgb, var(--story) 50%, transparent), transparent 70%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--story) 72%, #03110b),
+      color-mix(in srgb, var(--story) 18%, #03110b)
+    );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+  .tilt {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    /* loops (float, ken burns, shine) stop instead of flickering */
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

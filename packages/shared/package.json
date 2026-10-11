@@ -1,0 +1,42 @@
+{
+  "name": "@iphoneha/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared enums, labels, zod schemas, DTO types and pure helpers for iPhoneHa",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "jest"
+  },
+  "dependencies": {
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@swc/core": "1.16.2",
+    "@swc/jest": "0.2.39",
+    "@types/jest": "29.5.14",
+    "eslint": "9.39.5",
+    "jest": "29.7.0",
+    "tsup": "8.5.1",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.70.0"
+  }
+}

@@ -1,0 +1,740 @@
+{
+  "iphone-16": {
+    "black": [
+      {
+        "file": "iphone-16/black-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16/black-2.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16/black-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "pink": [
+      {
+        "file": "iphone-16/pink-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16/pink-2.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16/pink-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "teal": [
+      {
+        "file": "iphone-16/teal-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16/teal-2.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16/teal-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "ultramarine": [
+      {
+        "file": "iphone-16/ultramarine-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16/ultramarine-2.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16/ultramarine-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "white": [
+      {
+        "file": "iphone-16/white-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16/white-2.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16/white-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ]
+  },
+  "iphone-16-pro": {
+    "black-titanium": [
+      {
+        "file": "iphone-16-pro/black-titanium-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16-pro/black-titanium-2.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16-pro/black-titanium-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "desert-titanium": [
+      {
+        "file": "iphone-16-pro/desert-titanium-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16-pro/desert-titanium-2.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16-pro/desert-titanium-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "natural-titanium": [
+      {
+        "file": "iphone-16-pro/natural-titanium-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16-pro/natural-titanium-2.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16-pro/natural-titanium-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "white-titanium": [
+      {
+        "file": "iphone-16-pro/white-titanium-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16-pro/white-titanium-2.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16-pro/white-titanium-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ]
+  },
+  "iphone-16-pro-max": {
+    "black-titanium": [
+      {
+        "file": "iphone-16-pro-max/black-titanium-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16-pro-max/black-titanium-2.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16-pro-max/black-titanium-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "desert-titanium": [
+      {
+        "file": "iphone-16-pro-max/desert-titanium-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16-pro-max/desert-titanium-2.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16-pro-max/desert-titanium-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "natural-titanium": [
+      {
+        "file": "iphone-16-pro-max/natural-titanium-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16-pro-max/natural-titanium-2.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16-pro-max/natural-titanium-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "white-titanium": [
+      {
+        "file": "iphone-16-pro-max/white-titanium-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16-pro-max/white-titanium-2.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-16-pro-max/white-titanium-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ]
+  },
+  "iphone-17": {
+    "black": [
+      {
+        "file": "iphone-17/black-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-17/black-2.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      },
+      {
+        "file": "iphone-17/black-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "lavender": [
+      {
+        "file": "iphone-17/lavender-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-17/lavender-2.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      },
+      {
+        "file": "iphone-17/lavender-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "mist-blue": [
+      {
+        "file": "iphone-17/mist-blue-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-17/mist-blue-2.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      },
+      {
+        "file": "iphone-17/mist-blue-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "sage": [
+      {
+        "file": "iphone-17/sage-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-17/sage-2.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      },
+      {
+        "file": "iphone-17/sage-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "white": [
+      {
+        "file": "iphone-17/white-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-17/white-2.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      },
+      {
+        "file": "iphone-17/white-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ]
+  },
+  "iphone-17-pro": {
+    "cosmic-orange": [
+      {
+        "file": "iphone-17-pro/cosmic-orange-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-17-pro/cosmic-orange-2.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-17-pro/cosmic-orange-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "deep-blue": [
+      {
+        "file": "iphone-17-pro/deep-blue-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-17-pro/deep-blue-2.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-17-pro/deep-blue-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "silver": [
+      {
+        "file": "iphone-17-pro/silver-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-17-pro/silver-2.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-17-pro/silver-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ]
+  },
+  "iphone-17-pro-max": {
+    "cosmic-orange": [
+      {
+        "file": "iphone-17-pro-max/cosmic-orange-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-17-pro-max/cosmic-orange-2.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-17-pro-max/cosmic-orange-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "deep-blue": [
+      {
+        "file": "iphone-17-pro-max/deep-blue-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-17-pro-max/deep-blue-2.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-17-pro-max/deep-blue-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "silver": [
+      {
+        "file": "iphone-17-pro-max/silver-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-17-pro-max/silver-2.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-17-pro-max/silver-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ]
+  },
+  "iphone-18-pro": {
+    "black": [
+      {
+        "file": "iphone-18-pro/black-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-18-pro/black-2.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      },
+      {
+        "file": "iphone-18-pro/black-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "burgundy": [
+      {
+        "file": "iphone-18-pro/burgundy-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-18-pro/burgundy-2.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      },
+      {
+        "file": "iphone-18-pro/burgundy-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "glacier": [
+      {
+        "file": "iphone-18-pro/glacier-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-18-pro/glacier-2.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      },
+      {
+        "file": "iphone-18-pro/glacier-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "silver": [
+      {
+        "file": "iphone-18-pro/silver-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-18-pro/silver-2.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      },
+      {
+        "file": "iphone-18-pro/silver-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ]
+  },
+  "iphone-18-pro-max": {
+    "black": [
+      {
+        "file": "iphone-18-pro-max/black-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-18-pro-max/black-2.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      },
+      {
+        "file": "iphone-18-pro-max/black-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "burgundy": [
+      {
+        "file": "iphone-18-pro-max/burgundy-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-18-pro-max/burgundy-2.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      },
+      {
+        "file": "iphone-18-pro-max/burgundy-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "glacier": [
+      {
+        "file": "iphone-18-pro-max/glacier-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-18-pro-max/glacier-2.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      },
+      {
+        "file": "iphone-18-pro-max/glacier-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "silver": [
+      {
+        "file": "iphone-18-pro-max/silver-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-18-pro-max/silver-2.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      },
+      {
+        "file": "iphone-18-pro-max/silver-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ]
+  },
+  "iphone-air": {
+    "cloud-white": [
+      {
+        "file": "iphone-air/cloud-white-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-air/cloud-white-2.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-air/cloud-white-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "light-gold": [
+      {
+        "file": "iphone-air/light-gold-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-air/light-gold-2.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-air/light-gold-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "sky-blue": [
+      {
+        "file": "iphone-air/sky-blue-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-air/sky-blue-2.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-air/sky-blue-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ],
+    "space-black": [
+      {
+        "file": "iphone-air/space-black-1.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-air/space-black-2.webp",
+        "height": 1250,
+        "kind": "DEVICE",
+        "width": 1000
+      },
+      {
+        "file": "iphone-air/space-black-3.webp",
+        "height": 1000,
+        "kind": "DETAIL",
+        "width": 1000
+      }
+    ]
+  }
+}

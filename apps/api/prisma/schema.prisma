@@ -1,0 +1,1097 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// iPhoneHa — PostgreSQL schema
+// Money: Toman, BigInt. Timestamps: UTC.
+// Extra constraints that Prisma cannot express (CHECKs, trigram index,
+// order-number sequence) live in the SQL migration files.
+// ─────────────────────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum SessionKind {
+  USER
+  ADMIN
+}
+
+enum OtpPurpose {
+  USER_LOGIN
+  ADMIN_LOGIN
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  MANAGER
+  SUPPORT
+  WAREHOUSE
+}
+
+enum RegistryStatus {
+  REGISTERED
+  ACTIVATION_CODE
+  NOT_REGISTERED
+}
+
+enum ShippingTime {
+  SAME_DAY
+  ONE_TO_TWO_DAYS
+  THREE_TO_FIVE_DAYS
+  WAREHOUSE
+  PRE_ORDER
+}
+
+enum OrderStatus {
+  PENDING
+  PAYMENT_PENDING
+  PAID
+  PROCESSING
+  READY_TO_SHIP
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum StatusActor {
+  SYSTEM
+  USER
+  ADMIN
+  PAYMENT
+}
+
+enum PaymentMethod {
+  ONLINE
+  SNAPPAY
+  TARA
+  DIGIPAY
+  NESIBA
+  BOJET
+  AZKIVAM
+  /// recorded by the staff: paid at the store, by card reader or by transfer
+  IN_STORE
+  /// the store's own instalments, secured by Sayad cheques (see InstallmentContract)
+  CHEQUE
+  /// the store's own instalments, secured by promissory notes
+  SAFTE
+}
+
+/// Where the order came from: the website checkout, or the staff taking it by phone or at the store.
+enum OrderSource {
+  WEBSITE
+  PHONE
+  IN_STORE
+}
+
+enum PaymentStatus {
+  INITIATED
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+  EXPIRED
+  REFUND_PENDING
+  REFUNDED
+}
+
+enum PaymentTxType {
+  CREATE
+  CALLBACK
+  VERIFY
+  STATUS
+  REFUND
+  /// «the goods reached the customer», sent to credit services that settle only after it (DigiPay)
+  DELIVERY
+}
+
+enum ReservationStatus {
+  ACTIVE
+  COMMITTED
+  RELEASED
+}
+
+enum InventoryMovementType {
+  RESTOCK
+  ADJUSTMENT
+  RESERVE
+  RELEASE
+  SALE
+  RETURN
+}
+
+enum DiscountType {
+  PERCENT
+  FIXED
+}
+
+enum RedemptionStatus {
+  ACTIVE
+  RELEASED
+}
+
+// ─── Identity ────────────────────────────────────────────────────────────────
+
+model User {
+  id          String    @id @default(cuid())
+  phone       String    @unique
+  firstName   String?
+  lastName    String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  lastLoginAt DateTime?
+
+  sessions          Session[]
+  addresses         Address[]
+  cart              Cart?
+  orders            Order[]
+  couponRedemptions CouponRedemption[]
+  creditRequests    CreditRequest[]
+  contracts         InstallmentContract[]
+  notes             CustomerNote[]
+
+  @@index([createdAt])
+}
+
+model AdminUser {
+  id          String    @id @default(cuid())
+  phone       String    @unique
+  name        String
+  role        AdminRole
+  isActive    Boolean   @default(true)
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  sessions            Session[]
+  auditLogs           AuditLog[]
+  statusChanges       OrderStatusHistory[]
+  creditRequests      CreditRequest[]
+  ordersCreated       Order[]               @relation("OrdersCreated")
+  devicesReceived     DeviceUnit[]          @relation("DevicesReceived")
+  contractsCreated    InstallmentContract[] @relation("ContractsCreated")
+  installmentPayments InstallmentPayment[]  @relation("InstallmentPaymentsRecorded")
+  priceChanges        PriceChange[]         @relation("PriceChanges")
+  customerNotes       CustomerNote[]        @relation("CustomerNotes")
+}
+
+/// One row per logged-in device. Only the SHA-256 of the cookie token is stored.
+/// DB CHECK: exactly one of userId / adminUserId is set, matching `kind`.
+model Session {
+  id          String      @id @default(cuid())
+  kind        SessionKind
+  tokenHash   String      @unique
+  userId      String?
+  adminUserId String?
+  ip          String?
+  userAgent   String?
+  deviceName  String?
+  createdAt   DateTime    @default(now())
+  lastSeenAt  DateTime    @default(now())
+  expiresAt   DateTime
+  revokedAt   DateTime?
+
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  adminUser AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([adminUserId, revokedAt])
+  @@index([expiresAt])
+}
+
+/// OTP codes are stored as HMAC-SHA256 hashes, never in clear text.
+model OtpCode {
+  id          String     @id @default(cuid())
+  phone       String
+  purpose     OtpPurpose
+  codeHash    String
+  attempts    Int        @default(0)
+  maxAttempts Int        @default(5)
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  ip          String?
+  createdAt   DateTime   @default(now())
+
+  @@index([phone, purpose, createdAt])
+  @@index([expiresAt])
+}
+
+model Address {
+  id            String   @id @default(cuid())
+  userId        String
+  title         String?
+  recipientName String
+  mobile        String
+  province      String
+  city          String
+  addressLine   String
+  postalCode    String
+  plaque        String?
+  unit          String?
+  notes         String?
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ─── Catalog ─────────────────────────────────────────────────────────────────
+
+model Product {
+  id               String         @id @default(cuid())
+  slug             String         @unique
+  name             String
+  nameEn           String
+  model            String
+  series           String
+  releaseYear      Int
+  tagline          String?
+  shortDescription String?
+  description      String
+  warranty         String
+  registryStatus   RegistryStatus @default(REGISTERED)
+  basePrice        BigInt
+  /// [{ key: string, value: string }]
+  specs            Json           @default("[]")
+  isActive         Boolean        @default(true)
+  isFeatured       Boolean        @default(false)
+  sortOrder        Int            @default(0)
+  ratingAvg        Float?
+  ratingCount      Int            @default(0)
+  seoTitle         String?
+  seoDescription   String?
+  /// Denormalized, lower-cased search text (names, series, colors, storages).
+  /// GIN trigram index created in migration.
+  searchText       String         @default("")
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  images         ProductImage[]
+  variants       ProductVariant[]
+  creditRequests CreditRequest[]
+
+  @@index([isActive, sortOrder])
+  @@index([series])
+  @@index([isFeatured])
+  @@index([releaseYear])
+}
+
+model Color {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  nameEn    String
+  hex       String
+  /// Optional CSS gradient used by the device mockup renderer.
+  finish    String?
+  /// Extra search keywords (fa/en), e.g. ["black", "مشکی"].
+  aliases   String[] @default([])
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  variants ProductVariant[]
+  images   ProductImage[]
+}
+
+model Storage {
+  id         String   @id @default(cuid())
+  capacityGb Int      @unique
+  label      String
+  labelFa    String
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  variants ProductVariant[]
+}
+
+/// DEVICE: the whole phone on a transparent background (cards, gallery).
+/// DETAIL: a full-bleed close-up photo that fills the gallery frame.
+enum ProductImageKind {
+  DEVICE
+  DETAIL
+}
+
+model ProductImage {
+  id         String           @id @default(cuid())
+  productId  String
+  /// null = shared image for all colors
+  colorId    String?
+  storageKey String
+  url        String
+  alt        String?
+  width      Int?
+  height     Int?
+  kind       ProductImageKind @default(DEVICE)
+  sortOrder  Int              @default(0)
+  createdAt  DateTime         @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  color   Color?  @relation(fields: [colorId], references: [id], onDelete: SetNull)
+
+  @@index([productId, colorId, sortOrder])
+}
+
+/// Independent sellable unit: one product × color × storage.
+model ProductVariant {
+  id              String       @id @default(cuid())
+  productId       String
+  colorId         String
+  storageId       String
+  sku             String       @unique
+  /// Sale price (Toman)
+  price           BigInt
+  /// Price before discount (Toman); null = no discount
+  compareAtPrice  BigInt?
+  /// Derived on write: round((compareAt - price) / compareAt * 100)
+  discountPercent Int          @default(0)
+  shippingTime    ShippingTime @default(ONE_TO_TWO_DAYS)
+  isActive        Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  product      Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
+  color        Color                  @relation(fields: [colorId], references: [id], onDelete: Restrict)
+  storage      Storage                @relation(fields: [storageId], references: [id], onDelete: Restrict)
+  inventory    Inventory?
+  cartItems    CartItem[]
+  orderItems   OrderItem[]
+  reservations InventoryReservation[]
+  movements    InventoryMovement[]
+  devices      DeviceUnit[]
+  priceChanges PriceChange[]
+
+  @@unique([productId, colorId, storageId])
+  @@index([productId, isActive])
+  @@index([price])
+  @@index([discountPercent])
+  @@index([shippingTime])
+}
+
+// ─── Inventory ───────────────────────────────────────────────────────────────
+
+/// available = stock - reserved.
+/// DB CHECK: stock >= 0, reserved >= 0, reserved <= stock, sold >= 0.
+model Inventory {
+  id                String   @id @default(cuid())
+  variantId         String   @unique
+  stock             Int      @default(0)
+  reserved          Int      @default(0)
+  sold              Int      @default(0)
+  lowStockThreshold Int      @default(2)
+  updatedAt         DateTime @updatedAt
+
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+}
+
+model InventoryReservation {
+  id        String            @id @default(cuid())
+  orderId   String
+  variantId String
+  quantity  Int
+  status    ReservationStatus @default(ACTIVE)
+  expiresAt DateTime
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  order   Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
+
+  @@unique([orderId, variantId])
+  @@index([status, expiresAt])
+  @@index([variantId, status])
+}
+
+/// Append-only ledger of every stock/reservation change.
+model InventoryMovement {
+  id            String                @id @default(cuid())
+  variantId     String
+  type          InventoryMovementType
+  /// Signed quantity of the change (see `type`)
+  quantity      Int
+  stockAfter    Int
+  reservedAfter Int
+  orderId       String?
+  adminUserId   String?
+  reason        String?
+  createdAt     DateTime              @default(now())
+
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@index([variantId, createdAt])
+  @@index([orderId])
+  @@index([type, createdAt])
+}
+
+// ─── Cart ────────────────────────────────────────────────────────────────────
+
+model Cart {
+  id             String    @id @default(cuid())
+  userId         String?   @unique
+  /// SHA-256 of the guest cart cookie token
+  guestTokenHash String?   @unique
+  couponCode     String?
+  expiresAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user  User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CartItem[]
+
+  @@index([expiresAt])
+}
+
+model CartItem {
+  id         String   @id @default(cuid())
+  cartId     String
+  variantId  String
+  quantity   Int
+  /// Unit price when added — used to flag price changes to the customer
+  priceAtAdd BigInt
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  cart    Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, variantId])
+}
+
+// ─── Orders ──────────────────────────────────────────────────────────────────
+
+model Order {
+  id                     String        @id @default(cuid())
+  /// Human-friendly number from sequence order_number_seq, e.g. IH100001
+  orderNumber            String        @unique
+  userId                 String
+  status                 OrderStatus   @default(PENDING)
+  paymentMethod          PaymentMethod
+  customerName           String
+  customerPhone          String
+  /// Snapshot of the address at purchase time
+  shippingAddress        Json
+  shippingMethodId       String?
+  /// Snapshot { code, name, etaLabel, cost }
+  shippingMethodSnapshot Json
+  /// Σ (compareAt ?? price) × qty
+  subtotal               BigInt
+  /// Product discounts (compareAt − price) × qty
+  itemsDiscount          BigInt        @default(0)
+  couponDiscount         BigInt        @default(0)
+  /// itemsDiscount + couponDiscount
+  discountTotal          BigInt        @default(0)
+  shippingCost           BigInt        @default(0)
+  total                  BigInt
+  couponCode             String?
+  notes                  String?
+  idempotencyKey         String?
+  reservationExpiresAt   DateTime?
+  cancelReason           String?
+  trackingCode           String?
+  paidAt                 DateTime?
+  shippedAt              DateTime?
+  deliveredAt            DateTime?
+  cancelledAt            DateTime?
+  source                 OrderSource   @default(WEBSITE)
+  /// the admin who recorded a phone or in-store order
+  createdById            String?
+  /// internal note for the staff, never shown to the customer
+  adminNote              String?
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+
+  user             User                   @relation(fields: [userId], references: [id], onDelete: Restrict)
+  shippingMethod   ShippingMethod?        @relation(fields: [shippingMethodId], references: [id], onDelete: SetNull)
+  createdBy        AdminUser?             @relation("OrdersCreated", fields: [createdById], references: [id], onDelete: SetNull)
+  items            OrderItem[]
+  payments         Payment[]
+  reservations     InventoryReservation[]
+  statusHistory    OrderStatusHistory[]
+  couponRedemption CouponRedemption?
+  contract         InstallmentContract?
+
+  @@unique([userId, idempotencyKey])
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@index([paymentMethod])
+  @@index([source, createdAt])
+}
+
+/// Immutable snapshot of what was bought.
+model OrderItem {
+  id                String       @id @default(cuid())
+  orderId           String
+  variantId         String?
+  productId         String?
+  productName       String
+  productSlug       String
+  variantTitle      String
+  colorName         String
+  storageLabel      String
+  sku               String
+  imageUrl          String?
+  unitPrice         BigInt
+  compareAtPrice    BigInt?
+  quantity          Int
+  /// (compareAt − price) × qty
+  discount          BigInt       @default(0)
+  /// unitPrice × qty
+  finalPrice        BigInt
+  shippingTime      ShippingTime
+  shippingTimeLabel String
+
+  order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  devices DeviceUnit[]
+
+  @@index([orderId])
+  @@index([variantId])
+}
+
+model OrderStatusHistory {
+  id          String       @id @default(cuid())
+  orderId     String
+  fromStatus  OrderStatus?
+  toStatus    OrderStatus
+  actor       StatusActor
+  adminUserId String?
+  note        String?
+  createdAt   DateTime     @default(now())
+
+  order     Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  adminUser AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
+
+  @@index([orderId, createdAt])
+}
+
+// ─── Payments ────────────────────────────────────────────────────────────────
+
+model Payment {
+  id            String        @id @default(cuid())
+  orderId       String
+  method        PaymentMethod
+  /// Concrete adapter/driver code, e.g. "zarinpal", "mock", "snappay-mock"
+  provider      String
+  amount        BigInt
+  status        PaymentStatus @default(INITIATED)
+  /// Provider reference (authority / payment token)
+  providerRef   String?
+  /// Bank/provider tracking reference after success
+  trackingCode  String?
+  redirectUrl   String?
+  failureReason String?
+  expiresAt     DateTime?
+  paidAt        DateTime?
+  refundedAt    DateTime?
+  meta          Json?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  order        Order                @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  transactions PaymentTransaction[]
+
+  @@unique([provider, providerRef])
+  @@index([orderId])
+  @@index([status, createdAt])
+  @@index([method, createdAt])
+}
+
+/// Every interaction with a payment provider (audit + idempotency).
+model PaymentTransaction {
+  id              String        @id @default(cuid())
+  paymentId       String
+  type            PaymentTxType
+  success         Boolean
+  requestPayload  Json?
+  responsePayload Json?
+  errorMessage    String?
+  /// e.g. "verify:<paymentId>" — guarantees single processing
+  idempotencyKey  String?       @unique
+  createdAt       DateTime      @default(now())
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([paymentId, createdAt])
+}
+
+// ─── Discounts ───────────────────────────────────────────────────────────────
+
+model Discount {
+  id             String       @id @default(cuid())
+  name           String
+  type           DiscountType
+  /// Percent (1..100) for PERCENT, Toman for FIXED
+  value          BigInt
+  /// Cap for PERCENT discounts (Toman)
+  maxDiscount    BigInt?
+  minOrderAmount BigInt?
+  startsAt       DateTime?
+  endsAt         DateTime?
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  coupons Coupon[]
+}
+
+model Coupon {
+  id           String   @id @default(cuid())
+  /// Upper-case code
+  code         String   @unique
+  discountId   String
+  /// null = unlimited
+  usageLimit   Int?
+  perUserLimit Int      @default(1)
+  usedCount    Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  discount    Discount           @relation(fields: [discountId], references: [id], onDelete: Cascade)
+  redemptions CouponRedemption[]
+}
+
+model CouponRedemption {
+  id        String           @id @default(cuid())
+  couponId  String
+  userId    String
+  orderId   String           @unique
+  amount    BigInt
+  status    RedemptionStatus @default(ACTIVE)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  coupon Coupon @relation(fields: [couponId], references: [id], onDelete: Restrict)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order  Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([couponId, userId, status])
+}
+
+// ─── Shipping ────────────────────────────────────────────────────────────────
+
+model ShippingMethod {
+  id               String   @id @default(cuid())
+  code             String   @unique
+  name             String
+  description      String?
+  /// Calculator key: "flat" | "city_courier"
+  calculator       String   @default("flat")
+  baseCost         BigInt
+  /// Free shipping when order subtotal (after discounts) ≥ threshold
+  freeThreshold    BigInt?
+  etaLabel         String
+  /// Empty = every province
+  allowedProvinces String[] @default([])
+  isActive         Boolean  @default(true)
+  sortOrder        Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  orders Order[]
+}
+
+// ─── Instalments with a cheque or promissory note ───────────────────────────
+
+enum CreditMethod {
+  CHEQUE
+  SAFTE
+}
+
+enum CreditRequestStatus {
+  NEW
+  CONTACTED
+  CONTRACTED
+  CANCELLED
+}
+
+/// A «خرید قسطی با چک یا سفته» request from the storefront form. The store
+/// calls back, checks the cheque and signs the contract; it is not an order.
+model CreditRequest {
+  id          String              @id @default(cuid())
+  /// short number to read out on the phone
+  number      Int                 @unique @default(autoincrement())
+  name        String
+  phone       String
+  city        String?
+  method      CreditMethod
+  productId   String?
+  /// kept as written, so a renamed or deleted model still reads right
+  productName String?
+  months      Int?
+  note        String?
+  /// the page the form was sent from
+  source      String?
+  status      CreditRequestStatus @default(NEW)
+  adminNote   String?
+  userId      String?
+  handledById String?
+  handledAt   DateTime?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  product   Product?             @relation(fields: [productId], references: [id], onDelete: SetNull)
+  user      User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  handledBy AdminUser?           @relation(fields: [handledById], references: [id], onDelete: SetNull)
+  contract  InstallmentContract?
+
+  @@index([status, createdAt])
+  @@index([phone, createdAt])
+}
+
+// ─── Devices (IMEI) ──────────────────────────────────────────────────────────
+
+enum DeviceUnitStatus {
+  IN_STOCK
+  SOLD
+  /// came back from a customer and waits to be checked
+  RETURNED
+  DEFECTIVE
+}
+
+/// One physical phone, by IMEI: received into stock, then sold on an order
+/// line. The numeric stock in Inventory stays the source of availability;
+/// units are the registry of which phone went to whom.
+model DeviceUnit {
+  id           String           @id @default(cuid())
+  variantId    String
+  /// 15 digits, Luhn-checked
+  imei         String           @unique
+  imei2        String?          @unique
+  serialNumber String?          @unique
+  status       DeviceUnitStatus @default(IN_STOCK)
+  /// purchase price in Toman, for the gross profit in reports
+  costPrice    BigInt?
+  supplier     String?
+  note         String?
+  receivedAt   DateTime         @default(now())
+  receivedById String?
+  orderItemId  String?
+  soldAt       DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  variant    ProductVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  orderItem  OrderItem?     @relation(fields: [orderItemId], references: [id], onDelete: SetNull)
+  receivedBy AdminUser?     @relation("DevicesReceived", fields: [receivedById], references: [id], onDelete: SetNull)
+
+  @@index([variantId, status])
+  @@index([orderItemId])
+  @@index([status, receivedAt])
+}
+
+// ─── The store's own instalment sales (cheque / promissory note) ─────────────
+
+enum ContractStatus {
+  ACTIVE
+  COMPLETED
+  DEFAULTED
+  CANCELLED
+}
+
+enum InstallmentStatus {
+  PENDING
+  PAID
+  /// forgiven or settled another way; counts as closed
+  WAIVED
+}
+
+enum ChequeStatus {
+  /// held by the store
+  IN_HAND
+  /// handed to the bank
+  DEPOSITED
+  CLEARED
+  BOUNCED
+  /// given back to the customer (paid another way, or the contract ended)
+  RETURNED
+}
+
+enum SafteStatus {
+  HELD
+  RETURNED
+  /// protested or taken to enforcement
+  CLAIMED
+}
+
+/// How money reached the store when the staff record a payment by hand.
+enum ManualPaymentChannel {
+  CASH
+  POS
+  TRANSFER
+  CHEQUE
+  ONLINE
+}
+
+/// A sale on the store's own instalments: what was sold, the schedule of dues
+/// and what secures them. Money in Toman; calendar days are `date` columns.
+model InstallmentContract {
+  id                  String         @id @default(cuid())
+  /// short number to read out on the phone, «قرارداد ۱۰۲۴»
+  number              Int            @unique @default(autoincrement())
+  method              CreditMethod
+  status              ContractStatus @default(ACTIVE)
+  userId              String?
+  orderId             String?        @unique
+  creditRequestId     String?        @unique
+  customerName        String
+  customerPhone       String
+  nationalId          String?
+  customerAddress     String?
+  guarantorName       String?
+  guarantorPhone      String?
+  guarantorNationalId String?
+  /// what was sold, as the contract states it
+  itemDescription     String
+  /// the cash price of the goods
+  cashPrice           BigInt
+  downPayment         BigInt
+  /// cashPrice − downPayment
+  financed            BigInt
+  /// Σ instalments − financed: the financing charge
+  markup              BigInt
+  /// downPayment + Σ instalments
+  totalPayable        BigInt
+  months              Int
+  /// the flat monthly fee the schedule was built with, for the record
+  monthlyFeePercent   Decimal?       @db.Decimal(5, 2)
+  contractDate        DateTime       @db.Date
+  note                String?
+  createdById         String?
+  completedAt         DateTime?
+  cancelledAt         DateTime?
+  cancelReason        String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  user          User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  order         Order?               @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  creditRequest CreditRequest?       @relation(fields: [creditRequestId], references: [id], onDelete: SetNull)
+  createdBy     AdminUser?           @relation("ContractsCreated", fields: [createdById], references: [id], onDelete: SetNull)
+  installments  Installment[]
+  cheques       Cheque[]
+  saftes        PromissoryNote[]
+  payments      InstallmentPayment[]
+
+  @@index([status, createdAt])
+  @@index([customerPhone])
+  @@index([userId])
+}
+
+model Installment {
+  id         String            @id @default(cuid())
+  contractId String
+  /// 1…n
+  index      Int
+  dueDate    DateTime          @db.Date
+  amount     BigInt
+  paidAmount BigInt            @default(0)
+  status     InstallmentStatus @default(PENDING)
+  paidAt     DateTime?
+  /// last reminder SMS
+  remindedAt DateTime?
+  note       String?
+
+  contract InstallmentContract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  cheque   Cheque?
+  payments InstallmentPayment[]
+
+  @@unique([contractId, index])
+  @@index([status, dueDate])
+}
+
+model Cheque {
+  id             String       @id @default(cuid())
+  contractId     String
+  installmentId  String?      @unique
+  /// 16-digit Sayad ID (شناسهٔ صیادی)
+  sayadId        String       @unique
+  serial         String?
+  bankName       String
+  branch         String?
+  /// the account holder, as printed on the cheque
+  drawerName     String
+  amount         BigInt
+  dueDate        DateTime     @db.Date
+  status         ChequeStatus @default(IN_HAND)
+  /// the store confirmed receipt in the Sayad system
+  sayadConfirmed Boolean      @default(false)
+  depositedAt    DateTime?
+  clearedAt      DateTime?
+  bouncedAt      DateTime?
+  returnedAt     DateTime?
+  note           String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  contract    InstallmentContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  installment Installment?        @relation(fields: [installmentId], references: [id], onDelete: SetNull)
+
+  @@index([status, dueDate])
+  @@index([contractId])
+}
+
+/// A promissory note (سفته) the customer signed as security for a contract.
+model PromissoryNote {
+  id         String      @id @default(cuid())
+  contractId String
+  /// treasury serial printed on the note, or the e-note ID
+  serial     String
+  amount     BigInt
+  electronic Boolean     @default(false)
+  status     SafteStatus @default(HELD)
+  /// null: payable on demand (عندالمطالبه)
+  dueDate    DateTime?   @db.Date
+  returnedAt DateTime?
+  note       String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  contract InstallmentContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@index([contractId])
+}
+
+/// Money received on a contract: the down payment, an instalment or part of
+/// one, a cleared cheque. A payment recorded by mistake is voided, not deleted.
+model InstallmentPayment {
+  id            String               @id @default(cuid())
+  contractId    String
+  installmentId String?
+  chequeId      String?
+  amount        BigInt
+  channel       ManualPaymentChannel
+  reference     String?
+  paidAt        DateTime
+  note          String?
+  recordedById  String?
+  voidedAt      DateTime?
+  createdAt     DateTime             @default(now())
+
+  contract    InstallmentContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  installment Installment?        @relation(fields: [installmentId], references: [id], onDelete: SetNull)
+  recordedBy  AdminUser?          @relation("InstallmentPaymentsRecorded", fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@index([contractId, paidAt])
+  @@index([paidAt])
+}
+
+// ─── Prices and customers ────────────────────────────────────────────────────
+
+/// Every price edit, one row per variant (a bulk change shares a batchId).
+model PriceChange {
+  id           String   @id @default(cuid())
+  variantId    String
+  oldPrice     BigInt
+  newPrice     BigInt
+  oldCompareAt BigInt?
+  newCompareAt BigInt?
+  batchId      String?
+  adminUserId  String?
+  createdAt    DateTime @default(now())
+
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  admin   AdminUser?     @relation("PriceChanges", fields: [adminUserId], references: [id], onDelete: SetNull)
+
+  @@index([variantId, createdAt])
+  @@index([createdAt])
+}
+
+/// A note the staff keep on a customer (calls, promises, preferences).
+model CustomerNote {
+  id        String   @id @default(cuid())
+  userId    String
+  body      String
+  authorId  String?
+  createdAt DateTime @default(now())
+
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  author AdminUser? @relation("CustomerNotes", fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+}
+
+// ─── Magazine ────────────────────────────────────────────────────────────────
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+}
+
+/// «مجله»: guides that answer what people search before buying an iPhone.
+/// The body is Markdown. Articles shipped with a release are inserted once and
+/// belong to the owner afterwards — a later release never overwrites them.
+model Article {
+  id           String        @id @default(cuid())
+  slug         String        @unique
+  title        String
+  /// meta description and the teaser in the list
+  excerpt      String
+  body         String
+  coverUrl     String?
+  coverAlt     String?
+  /// storage key of a cover uploaded in the admin (deleted with it)
+  coverKey     String?
+  seoTitle     String?
+  /// the search phrase the article is written for
+  focusKeyword String?
+  status       ArticleStatus @default(DRAFT)
+  publishedAt  DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([status, publishedAt])
+}
+
+// ─── Admin & system ──────────────────────────────────────────────────────────
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  adminUserId String?
+  action      String
+  entityType  String
+  entityId    String?
+  before      Json?
+  after       Json?
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  adminUser AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([adminUserId, createdAt])
+  @@index([createdAt])
+}
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+/// Stored responses for Idempotency-Key requests (checkout / orders).
+model IdempotencyRecord {
+  id           String   @id @default(cuid())
+  scope        String
+  key          String
+  requestHash  String
+  statusCode   Int
+  responseBody Json
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime
+
+  @@unique([scope, key])
+  @@index([expiresAt])
+}

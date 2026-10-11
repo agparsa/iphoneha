@@ -1,0 +1,27 @@
+[Unit]
+Description=iPhoneHa storefront (Next.js)
+After=network.target iphoneha-api.service
+Wants=iphoneha-api.service
+
+[Service]
+Type=simple
+User=iphoneha
+Group=iphoneha
+WorkingDirectory=/home/iphoneha/app/apps/web
+EnvironmentFile=/home/iphoneha/app/.env
+Environment=NODE_ENV=production
+# bound to the loopback: only the cPanel nginx in front may reach it
+ExecStart=/bin/node node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000
+Restart=always
+RestartSec=5
+MemoryMax=900M
+StandardOutput=append:/home/iphoneha/logs/web.log
+StandardError=append:/home/iphoneha/logs/web.error.log
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/home/iphoneha/app /home/iphoneha/logs
+
+[Install]
+WantedBy=multi-user.target

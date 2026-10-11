@@ -1,0 +1,132 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22.12'
+  # the app reads a single .env at the repo root
+  DATABASE_URL: postgresql://iphoneha:iphoneha@localhost:5432/iphoneha?schema=public
+  DATABASE_URL_TEST: postgresql://iphoneha:iphoneha@localhost:5432/iphoneha_test?schema=public
+  REDIS_URL: redis://localhost:6379/0
+  NODE_ENV: test
+
+jobs:
+  verify:
+    name: lint · typecheck · tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: iphoneha
+          POSTGRES_PASSWORD: iphoneha
+          POSTGRES_DB: iphoneha
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U iphoneha" --health-interval 5s
+          --health-timeout 5s --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s
+          --health-timeout 5s --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Prepare env and databases
+        run: |
+          cp .env.example .env
+          psql "$DATABASE_URL" -c 'CREATE DATABASE iphoneha_test' || true
+        env:
+          PGPASSWORD: iphoneha
+
+      - run: pnpm --filter @iphoneha/shared build
+      - run: pnpm db:generate
+      - run: pnpm db:migrate
+      - run: pnpm db:seed
+
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm test:integration
+      - run: pnpm build
+
+  e2e:
+    name: end-to-end (Playwright)
+    runs-on: ubuntu-latest
+    needs: verify
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: iphoneha
+          POSTGRES_PASSWORD: iphoneha
+          POSTGRES_DB: iphoneha
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U iphoneha" --health-interval 5s
+          --health-timeout 5s --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s
+          --health-timeout 5s --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: cp .env.example .env
+      - run: pnpm --filter @iphoneha/shared build
+      - run: pnpm db:generate && pnpm db:migrate && pnpm db:seed
+      - run: pnpm --filter @iphoneha/api build
+      - run: pnpm --filter @iphoneha/web build
+
+      - name: Install Playwright browser
+        run: pnpm --filter @iphoneha/e2e exec playwright install --with-deps chromium
+
+      - name: Start API and web
+        run: |
+          pnpm --filter @iphoneha/api start &
+          pnpm --filter @iphoneha/web start &
+          npx --yes wait-on http://localhost:4000/api/health http://localhost:3000 --timeout 120000
+
+      - run: pnpm test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: e2e/playwright-report
+          retention-days: 7
