@@ -80,6 +80,13 @@ else
 fi
 chown -R $USER_NAME:$USER_NAME "$APP_DIR"
 install -d -o $USER_NAME -g $USER_NAME "$HOME_DIR/logs" "$APP_DIR/storage"
+# systemd opens append logs as root; create them with the app owner first.
+# copytruncate then retains these inodes and ownership across rotations.
+for LOG_NAME in api.log api.error.log web.log web.error.log; do
+  touch "$HOME_DIR/logs/$LOG_NAME"
+  chown "$USER_NAME:$USER_NAME" "$HOME_DIR/logs/$LOG_NAME"
+  chmod 640 "$HOME_DIR/logs/$LOG_NAME"
+done
 
 # ── 2. configuration ────────────────────────────────────────────────────────
 bold "2/8  configuration"
