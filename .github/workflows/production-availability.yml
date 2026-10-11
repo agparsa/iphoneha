@@ -35,4 +35,3 @@ jobs:
           fi
           printf '### Production availability\n\nURL: %s\n\nHTTP: %s\n\nDuration: %s seconds\n' \
             "$TARGET_URL" "$status" "$duration" >> "$GITHUB_STEP_SUMMARY"
-
