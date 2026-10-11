@@ -74,7 +74,21 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm test:integration
-      - run: pnpm build
+      - run: pnpm --filter @iphoneha/api build
+      - name: Start API for storefront prerendering
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm --filter @iphoneha/api start > /tmp/iphoneha-api.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --max-time 2 http://localhost:4000/api/health > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/iphoneha-api.log
+          exit 1
+      - run: pnpm --filter @iphoneha/web build
 
   e2e:
     name: end-to-end (Playwright)
@@ -114,16 +128,34 @@ jobs:
       - run: pnpm --filter @iphoneha/shared build
       - run: pnpm db:generate && pnpm db:migrate && pnpm db:seed
       - run: pnpm --filter @iphoneha/api build
+      - name: Start API for storefront prerendering
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm --filter @iphoneha/api start > /tmp/iphoneha-api.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --max-time 2 http://localhost:4000/api/health > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/iphoneha-api.log
+          exit 1
       - run: pnpm --filter @iphoneha/web build
 
       - name: Install Playwright browser
         run: pnpm --filter @iphoneha/e2e exec playwright install --with-deps chromium
 
-      - name: Start API and web
+      - name: Start web
         run: |
-          pnpm --filter @iphoneha/api start &
           pnpm --filter @iphoneha/web start &
-          npx --yes wait-on http://localhost:4000/api/health http://localhost:3000 --timeout 120000
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --max-time 2 http://localhost:3000 > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1
 
       - run: pnpm test:e2e
 
