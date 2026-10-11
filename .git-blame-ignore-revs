@@ -1,0 +1,5 @@
+# git blame --ignore-revs-file .git-blame-ignore-revs
+# or once per clone: git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# style: Prettier over the whole repository, no logic change
+3595a0f22988a1de7a137c26100d5f34cfd7d793

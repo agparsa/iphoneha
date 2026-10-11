@@ -1,0 +1,191 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '22.12'
+  # the app reads a single .env at the repo root
+  DATABASE_URL: postgresql://iphoneha:iphoneha@localhost:5432/iphoneha?schema=public
+  DATABASE_URL_TEST: postgresql://iphoneha:iphoneha@localhost:5432/iphoneha_test?schema=public
+  REDIS_URL: redis://localhost:6379/0
+  NODE_ENV: test
+
+jobs:
+  verify:
+    name: lint · typecheck · tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: iphoneha
+          POSTGRES_PASSWORD: iphoneha
+          POSTGRES_DB: iphoneha
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U iphoneha" --health-interval 5s
+          --health-timeout 5s --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s
+          --health-timeout 5s --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Prepare env and databases
+        run: |
+          cp .env.example .env
+          psql "$DATABASE_URL" -c 'CREATE DATABASE iphoneha_test' || true
+        env:
+          PGPASSWORD: iphoneha
+
+      - run: pnpm --filter @iphoneha/shared build
+      - run: pnpm db:generate
+      - run: pnpm db:migrate
+      - run: pnpm db:seed
+
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm test:integration
+      - run: pnpm --filter @iphoneha/api build
+      - name: Start API for storefront prerendering
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm --filter @iphoneha/api start > /tmp/iphoneha-api.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --max-time 2 http://localhost:4000/api/health > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/iphoneha-api.log
+          exit 1
+      - run: pnpm --filter @iphoneha/web build
+
+  e2e:
+    name: end-to-end (Playwright)
+    runs-on: ubuntu-latest
+    needs: verify
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: iphoneha
+          POSTGRES_PASSWORD: iphoneha
+          POSTGRES_DB: iphoneha
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U iphoneha" --health-interval 5s
+          --health-timeout 5s --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s
+          --health-timeout 5s --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: cp .env.example .env
+      - run: pnpm --filter @iphoneha/shared build
+      - run: pnpm db:generate && pnpm db:migrate && pnpm db:seed
+      - run: pnpm --filter @iphoneha/api build
+      - name: Start API for storefront prerendering
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm --filter @iphoneha/api start > /tmp/iphoneha-api.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --max-time 2 http://localhost:4000/api/health > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/iphoneha-api.log
+          exit 1
+      - run: pnpm --filter @iphoneha/web build
+
+      - name: Install Playwright browser
+        run: pnpm --filter @iphoneha/e2e exec playwright install --with-deps chromium
+
+      - name: Start web
+        run: |
+          pnpm --filter @iphoneha/web start &
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --max-time 2 http://localhost:3000 > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1
+
+      - run: pnpm test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: e2e/playwright-report
+          retention-days: 7
+
+  release-source:
+    name: package verified source
+    runs-on: ubuntu-latest
+    needs: [verify, e2e]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create immutable source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          git archive --format=tar.gz --output=iphoneha-source.tar.gz HEAD
+          git rev-parse HEAD > source-commit.txt
+          sha256sum iphoneha-source.tar.gz > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: iphoneha-verified-source-${{ github.sha }}
+          path: |
+            iphoneha-source.tar.gz
+            source-commit.txt
+            SHA256SUMS
+          retention-days: 14
+          if-no-files-found: error

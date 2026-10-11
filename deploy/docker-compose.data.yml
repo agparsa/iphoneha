@@ -1,0 +1,106 @@
+# PostgreSQL + Redis for iphoneha.com.
+#
+# Why containers: the server is a cPanel box that already hosts other live
+# sites, and neither package is installable from its repos (CloudLinux 10 has
+# no `redis`). Containers keep both services out of the host's package set and
+# make removal a single command.
+#
+# Both run on the host's network and listen on 127.0.0.1 ONLY — nothing here is
+# reachable from the internet. Host networking (instead of published ports) is
+# deliberate: on a cPanel box the firewall (CSF / firewalld) routinely drops
+# the traffic between the host and Docker's bridge, so a published port accepts
+# the TCP connection and then never answers (Prisma: P1001). On the loopback
+# there is no docker-proxy, NAT or firewall rule in the way.
+# Ports are shifted off the defaults so they can never collide with a service
+# cPanel might install later.
+
+name: iphoneha
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: iphoneha-postgres
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-iphoneha}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-iphoneha}
+      # Persian text sorts correctly and pg_trgm search behaves the same as in dev
+      LANG: en_US.utf8
+      # pg_isready / psql / pg_dump inside the container default to this port
+      PGPORT: '55432'
+    command:
+      - postgres
+      - -c
+      - listen_addresses=127.0.0.1
+      - -c
+      - port=55432
+      - -c
+      - max_connections=100
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - effective_cache_size=768MB
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -h 127.0.0.1 -p 55432 -U ${POSTGRES_USER:-iphoneha} -d ${POSTGRES_DB:-iphoneha}',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+
+  redis:
+    image: redis:7-alpine
+    container_name: iphoneha-redis
+    restart: unless-stopped
+    network_mode: host
+    # AOF on: the reservation-expiry queue must survive a restart, otherwise a
+    # crash could leave stock reserved forever.
+    # A password, because the loopback is shared: every other site's processes
+    # on this cPanel box can open 127.0.0.1:56379, and Redis holds the session
+    # cache and the job queues. bootstrap-root.sh generates it into .env.
+    command:
+      [
+        'redis-server',
+        '--bind',
+        '127.0.0.1',
+        '--port',
+        '56379',
+        '--protected-mode',
+        'yes',
+        '--requirepass',
+        '${REDIS_PASSWORD:?set REDIS_PASSWORD in .env}',
+        '--appendonly',
+        'yes',
+        '--maxmemory',
+        '192mb',
+        '--maxmemory-policy',
+        'noeviction',
+      ]
+    environment:
+      # redis-cli inside the container (the health check) signs in with this
+      REDISCLI_AUTH: ${REDIS_PASSWORD:?set REDIS_PASSWORD in .env}
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-h', '127.0.0.1', '-p', '56379', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+volumes:
+  pgdata:
+  redisdata:

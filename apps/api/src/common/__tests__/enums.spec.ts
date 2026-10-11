@@ -1,0 +1,70 @@
+import {
+  AdminRole as PrismaAdminRole,
+  ArticleStatus as PrismaArticleStatus,
+  ChequeStatus as PrismaChequeStatus,
+  ContractStatus as PrismaContractStatus,
+  CreditMethod as PrismaCreditMethod,
+  CreditRequestStatus as PrismaCreditRequestStatus,
+  DeviceUnitStatus as PrismaDeviceUnitStatus,
+  DiscountType as PrismaDiscountType,
+  InstallmentStatus as PrismaInstallmentStatus,
+  InventoryMovementType as PrismaMovementType,
+  ManualPaymentChannel as PrismaManualPaymentChannel,
+  OrderSource as PrismaOrderSource,
+  OrderStatus as PrismaOrderStatus,
+  PaymentMethod as PrismaPaymentMethod,
+  PaymentStatus as PrismaPaymentStatus,
+  ProductImageKind as PrismaProductImageKind,
+  RegistryStatus as PrismaRegistryStatus,
+  SafteStatus as PrismaSafteStatus,
+  ShippingTime as PrismaShippingTime,
+} from '@prisma/client';
+import {
+  ADMIN_ROLES,
+  ARTICLE_STATUSES,
+  CHEQUE_STATUSES,
+  CONTRACT_STATUSES,
+  CREDIT_METHODS,
+  CREDIT_REQUEST_STATUSES,
+  DEVICE_UNIT_STATUSES,
+  DISCOUNT_TYPES,
+  INSTALLMENT_STATUSES,
+  INVENTORY_MOVEMENT_TYPES,
+  MANUAL_PAYMENT_CHANNELS,
+  ORDER_PAYMENT_METHODS,
+  ORDER_SOURCES,
+  ORDER_STATUSES,
+  PAYMENT_STATUSES,
+  PRODUCT_IMAGE_KINDS,
+  REGISTRY_STATUSES,
+  SAFTE_STATUSES,
+  SHIPPING_TIMES,
+} from '@iphoneha/shared';
+
+/** The shared package mirrors the Prisma enums; this keeps them honest. */
+describe('shared enums match the database schema', () => {
+  it.each([
+    ['OrderStatus', PrismaOrderStatus, ORDER_STATUSES],
+    // the checkout methods plus the ones the staff record (IN_STORE, CHEQUE, SAFTE)
+    ['PaymentMethod', PrismaPaymentMethod, ORDER_PAYMENT_METHODS],
+    ['PaymentStatus', PrismaPaymentStatus, PAYMENT_STATUSES],
+    ['ShippingTime', PrismaShippingTime, SHIPPING_TIMES],
+    ['RegistryStatus', PrismaRegistryStatus, REGISTRY_STATUSES],
+    ['AdminRole', PrismaAdminRole, ADMIN_ROLES],
+    ['DiscountType', PrismaDiscountType, DISCOUNT_TYPES],
+    ['InventoryMovementType', PrismaMovementType, INVENTORY_MOVEMENT_TYPES],
+    ['ProductImageKind', PrismaProductImageKind, PRODUCT_IMAGE_KINDS],
+    ['CreditMethod', PrismaCreditMethod, CREDIT_METHODS],
+    ['CreditRequestStatus', PrismaCreditRequestStatus, CREDIT_REQUEST_STATUSES],
+    ['ArticleStatus', PrismaArticleStatus, ARTICLE_STATUSES],
+    ['OrderSource', PrismaOrderSource, ORDER_SOURCES],
+    ['ManualPaymentChannel', PrismaManualPaymentChannel, MANUAL_PAYMENT_CHANNELS],
+    ['DeviceUnitStatus', PrismaDeviceUnitStatus, DEVICE_UNIT_STATUSES],
+    ['ContractStatus', PrismaContractStatus, CONTRACT_STATUSES],
+    ['InstallmentStatus', PrismaInstallmentStatus, INSTALLMENT_STATUSES],
+    ['ChequeStatus', PrismaChequeStatus, CHEQUE_STATUSES],
+    ['SafteStatus', PrismaSafteStatus, SAFTE_STATUSES],
+  ])('%s', (_name, prismaEnum, sharedValues) => {
+    expect(Object.values(prismaEnum).sort()).toEqual([...sharedValues].sort());
+  });
+});

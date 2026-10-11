@@ -1,0 +1,55 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build output
+dist/
+.next/
+out/
+*.tsbuildinfo
+packages/*/dist/
+
+# local data: uploaded media (STORAGE_LOCAL_DIR) — anchored, so the API's
+# storage module (apps/api/src/modules/storage) is not ignored with it
+/storage/
+/storage-test/
+apps/*/storage/
+apps/*/storage-test/
+*.log
+
+# environment
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# tests
+coverage/
+e2e/test-results/
+e2e/playwright-report/
+e2e/tests/.auth/
+
+# editors / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# deploy marker written on the server
+.deploy-ok
+
+# redis snapshots from local test servers
+dump.rdb
+
+# written by `next dev` (Next.js agent hints), not part of the project
+apps/web/AGENTS.md
+apps/web/CLAUDE.md
+
+# secrets and operator artifacts
+.env.*
+!.env.example
+*.pem
+*.key
+*.dump
+*.bak
+file-inventory.json

@@ -1,0 +1,14 @@
+**/node_modules
+**/.next
+**/dist
+**/storage
+**/storage-test
+**/test-results
+**/playwright-report
+**/.turbo
+**/*.log
+.git
+.env
+.env.*
+!.env.example
+e2e/tests/.auth

@@ -1,0 +1,55 @@
+{
+  "name": "iphoneha",
+  "private": true,
+  "version": "0.1.0",
+  "description": "آیفونی‌ها — فروشگاه تخصصی آیفون (Next.js + NestJS + PostgreSQL)",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "infra:up": "docker compose up -d postgres redis minio minio-init",
+    "infra:down": "docker compose down",
+    "dev": "pnpm --filter @iphoneha/shared build && pnpm -r --parallel --filter @iphoneha/shared --filter @iphoneha/api --filter @iphoneha/web dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm --filter @iphoneha/shared --filter @iphoneha/api test",
+    "test:unit": "pnpm --filter @iphoneha/shared --filter @iphoneha/api test",
+    "test:integration": "pnpm --filter @iphoneha/api test:integration",
+    "test:e2e": "pnpm --filter @iphoneha/e2e test",
+    "db:generate": "pnpm --filter @iphoneha/api prisma:generate",
+    "db:migrate": "pnpm --filter @iphoneha/api prisma:migrate",
+    "db:migrate:dev": "pnpm --filter @iphoneha/api prisma:migrate:dev",
+    "db:seed": "pnpm --filter @iphoneha/api prisma:seed",
+    "db:reset": "pnpm --filter @iphoneha/api prisma:reset",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "otp:reset": "pnpm --filter @iphoneha/api otp:reset",
+    "e2e": "pnpm --filter @iphoneha/e2e test",
+    "test:all": "pnpm test && pnpm test:integration && pnpm test:e2e",
+    "prepare": "simple-git-hooks"
+  },
+  "devDependencies": {
+    "prettier": "3.9.8",
+    "typescript": "5.9.3",
+    "lint-staged": "16.2.7",
+    "simple-git-hooks": "2.13.1"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "@swc/core",
+      "esbuild",
+      "prisma",
+      "sharp",
+      "unrs-resolver",
+      "@parcel/watcher",
+      "msgpackr-extract"
+    ]
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm exec lint-staged"
+  }
+}
