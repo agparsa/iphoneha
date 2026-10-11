@@ -9,6 +9,9 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 env:
   NODE_VERSION: '22.12'
   # the app reads a single .env at the repo root
@@ -130,3 +133,27 @@ jobs:
           name: playwright-report
           path: e2e/playwright-report
           retention-days: 7
+
+  release-source:
+    name: package verified source
+    runs-on: ubuntu-latest
+    needs: [verify, e2e]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create immutable source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          git archive --format=tar.gz --output=iphoneha-source.tar.gz HEAD
+          git rev-parse HEAD > source-commit.txt
+          sha256sum iphoneha-source.tar.gz > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: iphoneha-verified-source-${{ github.sha }}
+          path: |
+            iphoneha-source.tar.gz
+            source-commit.txt
+            SHA256SUMS
+          retention-days: 14
+          if-no-files-found: error

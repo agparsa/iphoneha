@@ -3,6 +3,8 @@ name: Production availability
 # Run after a deployment from Actions > Production availability > Run workflow.
 # This verifies the public HTTP/TLS path, not the deployed commit or business flows.
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions: {}
